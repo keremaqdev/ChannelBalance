@@ -1,0 +1,39 @@
+name: inventory-sync-engine
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ise-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: inventory_sync
+      POSTGRES_USER: ise_user
+      POSTGRES_PASSWORD: ise_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ise_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ise_user -d inventory_sync"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: ise-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - ise_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  ise_pgdata:
+  ise_redisdata:
